@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misi: Uang Pintar! — Flipbook Interaktif Literasi Keuangan Anak</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Decorative Floating Background -->
+  <div class="bg-decor" aria-hidden="true">
+    <span class="cloud cloud-1"></span>
+    <span class="cloud cloud-2"></span>
+    <span class="cloud cloud-3"></span>
+    <span class="sparkle s-1">✦</span>
+    <span class="sparkle s-2">★</span>
+    <span class="sparkle s-3">✦</span>
+    <span class="sparkle s-4">★</span>
+  </div>
+
+  <!-- Top Header / Toolbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button id="btn-toc" class="tool-btn" title="Daftar Isi" aria-label="Buka Daftar Isi">
+        <span class="icon">📖</span>
+        <span class="btn-label">Daftar Isi</span>
+      </button>
+      <div class="brand-title">
+        <span class="brand-badge">MISI: UANG PINTAR!</span>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="score-pill" title="Total Bintang yang Dikumpulkan">
+        <span>⭐</span>
+        <span id="total-stars">0</span>
+        <span class="score-text">Bintang</span>
+      </div>
+      <div class="page-indicator" id="page-indicator">Sampul</div>
+    </div>
+
+    <div class="topbar-right">
+      <button id="btn-sound" class="tool-btn" title="Suara Efek" aria-label="Aktifkan atau matikan suara">
+        <span class="icon" id="sound-icon">🔊</span>
+        <span class="btn-label">Suara</span>
+      </button>
+      <button id="btn-fullscreen" class="tool-btn" title="Layar Penuh" aria-label="Mode layar penuh">
+        <span class="icon">⛶</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Flipbook Stage -->
+  <main class="stage-wrapper">
+    <button id="btn-prev" class="nav-arrow nav-prev" aria-label="Halaman Sebelumnya" title="Sebelumnya (←)">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <div class="book-viewport" id="book-viewport">
+      <div class="book" id="book" role="region" aria-label="Flipbook Misi Uang Pintar">
+        <!-- Pages / Leaves will be injected dynamically by js/flipbook.js -->
+      </div>
+    </div>
+
+    <button id="btn-next" class="nav-arrow nav-next" aria-label="Halaman Berikutnya" title="Berikutnya (→)">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </main>
+
+  <!-- Bottom Progress Bar -->
+  <footer class="bottombar">
+    <div class="progress-wrap">
+      <button id="btn-home" class="mini-nav-btn" title="Ke Sampul">🏠</button>
+      <div class="progress-track" id="progress-track" role="slider" aria-label="Progres Halaman" tabindex="0">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <span class="progress-label" id="progress-label">1 / 18</span>
+    </div>
+    <p class="hint-text">Tip: Klik sudut halaman, tekan tombol panah ⬅️ ➡️, atau geser layar untuk membalik halaman!</p>
+  </footer>
+
+  <!-- Table of Contents Modal -->
+  <div class="modal-backdrop" id="toc-modal" hidden>
+    <div class="modal-card toc-card" role="dialog" aria-modal="true" aria-labelledby="toc-title">
+      <div class="modal-header">
+        <h2 id="toc-title">📚 Daftar Isi Petualangan</h2>
+        <button class="close-modal-btn" id="close-toc" aria-label="Tutup">✕</button>
+      </div>
+      <div class="toc-grid" id="toc-grid"></div>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Scripts -->
+  <script src="js/sound.js"></script>
+  <script src="js/illustrations.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/flipbook.js"></script>
+</body>
+</html>

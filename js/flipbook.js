@@ -366,11 +366,12 @@
   const tocGrid = document.getElementById('toc-grid');
 
   let currentLeaf = 0; // Desktop: leaf index 0..9 (9 leaves = 18 pages)
-  let currentMobilePage = 0; // Mobile: page index 0..17
+  let currentMobilePage = 0; // Tablet portrait & Mobile: page index 0..17
+  let singleFlipTimer = null;
   const totalLeaves = Math.ceil(PAGES.length / 2);
 
   function isMobile() {
-    return window.innerWidth <= 820;
+    return window.innerWidth <= 900;
   }
 
   function buildBook() {
@@ -425,45 +426,132 @@
     });
 
     // Bind page corner clicks
-    bookEl.querySelectorAll('[data-action="next"]').forEach((el) => {
-      el.addEventListener('click', next);
+    bookEl.querySelectorAll('[data-action]').forEach((el) => {
+      el.addEventListener('click', () => {
+        if (isMobile()) {
+          next();
+        } else if (el.dataset.action === 'next') {
+          next();
+        } else {
+          prev();
+        }
+      });
     });
-    bookEl.querySelectorAll('[data-action="prev"]').forEach((el) => {
-      el.addEventListener('click', prev);
+  }
+
+  function clearSingleAnimClasses() {
+    if (singleFlipTimer) {
+      clearTimeout(singleFlipTimer);
+      singleFlipTimer = null;
+    }
+    bookEl.querySelectorAll('.page-face').forEach((face) => {
+      face.classList.remove('single-flip-out-next', 'single-flip-in-prev', 'single-under-reveal');
+      face.style.zIndex = '';
     });
+  }
+
+  function updateSinglePageHUD() {
+    const pct = ((currentMobilePage + 1) / PAGES.length) * 100;
+    progressFill.style.width = `${pct}%`;
+    progressLabel.textContent = `${currentMobilePage + 1} / ${PAGES.length}`;
+    pageIndicator.textContent = PAGES[currentMobilePage].title;
+    prevBtn.disabled = currentMobilePage === 0;
+    nextBtn.disabled = currentMobilePage === PAGES.length - 1;
+  }
+
+  function renderSinglePageStatic() {
+    const leaves = Array.from(bookEl.querySelectorAll('.leaf'));
+    bookEl.classList.remove('is-cover', 'is-back');
+    clearSingleAnimClasses();
+    leaves.forEach((leaf, i) => {
+      const front = leaf.querySelector('.page-front');
+      const back = leaf.querySelector('.page-back');
+      const frontIdx = i * 2;
+      const backIdx = i * 2 + 1;
+
+      leaf.classList.remove('flipped');
+      leaf.style.transform = 'none';
+      leaf.style.zIndex = (frontIdx === currentMobilePage || backIdx === currentMobilePage) ? 10 : 1;
+
+      front.style.display = frontIdx === currentMobilePage ? 'flex' : 'none';
+      if (back) {
+        back.style.transform = 'none';
+        back.style.display = backIdx === currentMobilePage ? 'flex' : 'none';
+      }
+    });
+    updateSinglePageHUD();
+  }
+
+  function animateSingleFlip(fromIdx, toIdx) {
+    if (fromIdx === toIdx) {
+      renderSinglePageStatic();
+      return;
+    }
+    const leaves = Array.from(bookEl.querySelectorAll('.leaf'));
+    bookEl.classList.remove('is-cover', 'is-back');
+    clearSingleAnimClasses();
+
+    const fromLeafIdx = Math.floor(fromIdx / 2);
+    const toLeafIdx = Math.floor(toIdx / 2);
+    const isForward = toIdx > fromIdx;
+
+    leaves.forEach((leaf, i) => {
+      const front = leaf.querySelector('.page-front');
+      const back = leaf.querySelector('.page-back');
+      const frontIdx = i * 2;
+      const backIdx = i * 2 + 1;
+
+      leaf.classList.remove('flipped');
+      leaf.style.transform = 'none';
+      if (i === fromLeafIdx && i === toLeafIdx) {
+        leaf.style.zIndex = 20;
+      } else if (i === fromLeafIdx) {
+        leaf.style.zIndex = isForward ? 20 : 10;
+      } else if (i === toLeafIdx) {
+        leaf.style.zIndex = isForward ? 10 : 20;
+      } else {
+        leaf.style.zIndex = 1;
+      }
+
+      const showFront = frontIdx === fromIdx || frontIdx === toIdx;
+      const showBack = backIdx === fromIdx || backIdx === toIdx;
+      front.style.display = showFront ? 'flex' : 'none';
+      if (back) {
+        back.style.transform = 'none';
+        back.style.display = showBack ? 'flex' : 'none';
+      }
+    });
+
+    const fromFace = leaves[fromLeafIdx].querySelector(fromIdx % 2 === 0 ? '.page-front' : '.page-back');
+    const toFace = leaves[toLeafIdx].querySelector(toIdx % 2 === 0 ? '.page-front' : '.page-back');
+
+    if (isForward) {
+      fromFace.style.zIndex = 20;
+      toFace.style.zIndex = 10;
+      fromFace.classList.add('single-flip-out-next');
+      toFace.classList.add('single-under-reveal');
+    } else {
+      fromFace.style.zIndex = 10;
+      toFace.style.zIndex = 20;
+      fromFace.classList.add('single-under-reveal');
+      toFace.classList.add('single-flip-in-prev');
+    }
+
+    updateSinglePageHUD();
+    singleFlipTimer = setTimeout(() => {
+      renderSinglePageStatic();
+    }, 540);
   }
 
   function updateView() {
     const leaves = Array.from(bookEl.querySelectorAll('.leaf'));
 
     if (isMobile()) {
-      // Single-page view on mobile
-      bookEl.classList.remove('is-cover', 'is-back');
-      leaves.forEach((leaf, i) => {
-        const front = leaf.querySelector('.page-front');
-        const back = leaf.querySelector('.page-back');
-        const frontIdx = i * 2;
-        const backIdx = i * 2 + 1;
-
-        leaf.classList.remove('flipped');
-        leaf.style.transform = 'none';
-        leaf.style.zIndex = (frontIdx === currentMobilePage || backIdx === currentMobilePage) ? 10 : 1;
-
-        front.style.display = frontIdx === currentMobilePage ? 'flex' : 'none';
-        if (back) {
-          back.style.transform = 'none';
-          back.style.display = backIdx === currentMobilePage ? 'flex' : 'none';
-        }
-      });
-
-      const pct = ((currentMobilePage + 1) / PAGES.length) * 100;
-      progressFill.style.width = `${pct}%`;
-      progressLabel.textContent = `${currentMobilePage + 1} / ${PAGES.length}`;
-      pageIndicator.textContent = PAGES[currentMobilePage].title;
-      prevBtn.disabled = currentMobilePage === 0;
-      nextBtn.disabled = currentMobilePage === PAGES.length - 1;
+      renderSinglePageStatic();
       return;
     }
+
+    clearSingleAnimClasses();
 
     // Desktop 3D Spread View
     leaves.forEach((leaf, i) => {
@@ -511,13 +599,16 @@
   function next() {
     if (isMobile()) {
       if (currentMobilePage < PAGES.length - 1) {
+        const fromIdx = currentMobilePage;
         currentMobilePage++;
+        currentLeaf = Math.ceil(currentMobilePage / 2);
         SoundFX.flip();
-        updateView();
+        animateSingleFlip(fromIdx, currentMobilePage);
       }
     } else {
       if (currentLeaf < totalLeaves) {
         currentLeaf++;
+        currentMobilePage = Math.min(PAGES.length - 1, currentLeaf * 2);
         SoundFX.flip();
         updateView();
       }
@@ -527,13 +618,16 @@
   function prev() {
     if (isMobile()) {
       if (currentMobilePage > 0) {
+        const fromIdx = currentMobilePage;
         currentMobilePage--;
+        currentLeaf = currentMobilePage === 0 ? 0 : Math.ceil(currentMobilePage / 2);
         SoundFX.flip();
-        updateView();
+        animateSingleFlip(fromIdx, currentMobilePage);
       }
     } else {
       if (currentLeaf > 0) {
         currentLeaf--;
+        currentMobilePage = currentLeaf === 0 ? 0 : currentLeaf * 2 - 1;
         SoundFX.flip();
         updateView();
       }
@@ -544,12 +638,15 @@
     const clamped = Math.max(0, Math.min(PAGES.length - 1, pageIdx));
     SoundFX.flip();
     if (isMobile()) {
+      const fromIdx = currentMobilePage;
       currentMobilePage = clamped;
+      currentLeaf = clamped === 0 ? 0 : Math.ceil(clamped / 2);
+      animateSingleFlip(fromIdx, currentMobilePage);
     } else {
       currentLeaf = clamped === 0 ? 0 : Math.ceil(clamped / 2);
       currentMobilePage = clamped;
+      updateView();
     }
-    updateView();
   }
 
   // Event Listeners
